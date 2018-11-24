@@ -1,12 +1,6 @@
 <?php
 
-include_once './OraDao.php';
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+include_once 'OraDao.php';
 
 /**
  * Description of PersistentObject
@@ -27,7 +21,7 @@ abstract class PersistentObject {
      */
     public abstract function getTableName();
     
-    protected function __construct(array $columns = null) {
+    public function __construct(array $columns = null) {
         $this->columns = $columns;
     }
     
@@ -47,11 +41,30 @@ abstract class PersistentObject {
     }
     
     /**
+     * Restituisce i valori delle chiavi primarie
+     * @return string
+     */
+    public function getPrimaryKeyValue(){
+        if(!isset($this->pk)){
+            return;
+        }
+        $strOut = '';
+        if(is_array($this->pk)){
+            foreach ($this->pk as $el){
+                $strOut .= $this->obj[$el];
+            }
+        }else{
+            $strOut .= $this->obj[$this->pk];
+        }
+        return $strOut;
+    }
+    
+    /**
      * restituisce le colonne
      * @return array | null
      */
     public function getColumns(){
-        return $this->getColumns();
+        return $this->columns;
     }
 
     /**
@@ -67,6 +80,8 @@ abstract class PersistentObject {
         if($type === 'get'){
             if(!$this->load){
                 $obj = OraDao::getInstance()->load($this);
+                $this->columns = array_keys($obj);
+                $this->obj = $obj;
             }
             if(isset($this->obj[$columnName])){
                 throw new DaoException("Required column $name not exist");

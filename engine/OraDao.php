@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Description of OraDao
  *
@@ -21,8 +15,8 @@ class OraDao {
     
     private $autocommit = true;
 
-    public function __construct() {
-        $this->connection = oci_connect(self::$username, self::$password, self::$connStr);
+    private function __construct() {
+        //$this->connection = oci_connect(self::$username, self::$password, self::$connStr);
     }
     
     public static function getInstance(){
@@ -42,8 +36,13 @@ class OraDao {
     }
 
     private function translateColumnName(&$name){
-        $name = substr(preg_replace("[A-Z]", "_$0", $name), 1);
+        echo $name. PHP_EOL;
+        $name = preg_replace("[A-Z]", "_$0", $name);
+        if($name[0] === '_'){
+            $name = substr($name, 1);
+        }
         $name = strtoupper($name);
+        echo $name. PHP_EOL;
     }
     
     private function transtateObjectName(&$name){
@@ -59,20 +58,24 @@ class OraDao {
         $name = str_replace('_', '', $name);
     }
     
-    private function load(PersistentObject $o){
+    public function load(PersistentObject $o, $forUpdate = false){
         $table = $o->getTableName();
         $select = $o->getColumns();
+        echo var_export($select, true).PHP_EOL;
         if(empty($select)){
             $select = '*';
         }else{
             $select = array_map(function($val) use($table){
-                $traslated = $this->translateColumnName($val);
-                return "$table.$traslated";
+                $this->translateColumnName($val);
+                return "$table.$val";
             }, $select);
             $select = implode(',', $select);
         }
         $sql = "SELECT $select FROM $table";
-        echo $sql;
+        if($forUpdate){
+            $sql .= ' for update';
+        }
+        echo $sql. PHP_EOL;
     }
     
     public function rollback(){
