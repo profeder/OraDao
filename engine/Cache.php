@@ -4,6 +4,7 @@ class Cache{
     
     private $cacheTable = array();
     private $refers = array();
+    private $objects = 0;
     
     public static function getInstance(){
         static $instance = null;
@@ -24,6 +25,7 @@ class Cache{
         }
         $this->cacheTable[$table][$pkVal] = $o;
         $this->refers[$table.$pkVal] = 1;
+        $this->objects++;
     }
     
     public function find($table, $k){

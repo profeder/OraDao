@@ -10,7 +10,7 @@ include_once 'OraDao.php';
 
 abstract class PersistentObject {
     
-    private $pk;                                // Nome del campo che fa da primary key
+    protected $pk;                              // Nome del campo che fa da primary key
     protected $obj;                             // Array contenente i campi restituiti
     private $columns;                           // Colonne specifiche su cui effettuare la select
     private $save = false;                      // Stato salvataggio dell'oggetto
@@ -78,13 +78,17 @@ abstract class PersistentObject {
         $type = substr($name, 0, 3);
         $columnName = substr($name, 3, strlen($name) - 3);
         if($type === 'get'){
-            if(!$this->load){
+            if(!$this->load && !in_array($columnName, $this->pk)){
                 $obj = OraDao::getInstance()->load($this);
+                if(empty($obj)){
+                    throw new Exception ('Error on fetching data');
+                }
                 $this->columns = array_keys($obj);
                 $this->obj = $obj;
+                $this->load = true;
             }
-            if(isset($this->obj[$columnName])){
-                throw new DaoException("Required column $name not exist");
+            if(!isset($this->obj[$columnName])){
+                throw new Exception("Required column $columnName not exist");
             }
             return $this->obj[$columnName];
         }elseif($type === 'set'){
