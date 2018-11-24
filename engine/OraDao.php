@@ -99,12 +99,14 @@ class OraDao {
             throw new Exception('Exception during query parsing: '. oci_error());
         }
         $i = 0;
+        $bindingArray = array();
         if(is_array($pk)){
             foreach ($pk as $val){
                 eval('$colVal = $o->get'.$val.'();');
                 $varName = ':'. $i++;
-                oci_bind_by_name($stid, $varName, $colVal);
                 echo "Binding $varName --> $colVal". PHP_EOL;
+                $bindingArray[$varName] = $colVal;
+                oci_bind_by_name($stid, $varName, $bindingArray[$varName]);
             }
         } else {
             eval('$colVal = $o->get'.$val.'();');
