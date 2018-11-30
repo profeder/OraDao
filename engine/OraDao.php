@@ -1,9 +1,10 @@
 <?php
 
 /**
- * Description of OraDao
+ * OraDao is query engine. It's responsable to manage connection with 
+ * database.
  *
- * @author fprofeti
+ * @author Federico Profeti (federico.profeti@gmail.com)
  */
 class OraDao {
     
@@ -15,6 +16,10 @@ class OraDao {
     
     private $autocommit = true;
 
+    /**
+     * connect to database
+     * @throws Exception
+     */
     private function __construct() {
         $this->connection = oci_connect(self::$username, self::$password, self::$tns);
         if(!$this->connection){
@@ -22,6 +27,10 @@ class OraDao {
         }
     }
     
+    /**
+     * Return an instance of OraDao
+     * @return \static
+     */
     public static function getInstance(){
         $static = null;
         if($static === NULL){
@@ -30,10 +39,26 @@ class OraDao {
         return $static;
     }
     
+    /**
+     * Return the current oracle connection
+     * @return type
+     */
+    public function getConnection(){
+        return $this->connection;
+    }
+    
+    /**
+     * Set the commit mode.
+     * @param boolean $autoCommit
+     */
     public function setAutoCommit($autoCommit){
         $this->autocommit = $autoCommit;
     }
     
+    /**
+     * Return the commit mode
+     * @return boolean
+     */
     public function getAutoCommit(){
         return $this->autocommit;
     }
@@ -59,7 +84,14 @@ class OraDao {
         $name = str_replace('_', '', $name);
     }
     
-    public function load(PersistentObject $o, $forUpdate = false){
+    /**
+     * Load a persistent Object from database
+     * @param PersistentObject $o model
+     * @param boolean $forUpdate
+     * @return array
+     * @throws Exception on errors
+     */
+    /*public function load(PersistentObject $o, $forUpdate = false){
         $table = $o->getTableName();
         $select = $o->getColumns();
         if(empty($select)){
@@ -128,6 +160,25 @@ class OraDao {
         unset($res);
         oci_free_statement($stid);
         return $out;
+    }*/
+    
+    public function load(PersistentObject $o){
+        $select = new SelectBuilder($o->getTableName());
+        $where = new WhereCondition();
+        $pk = $o->getPrimaryKey();
+        if(empty($pk)){
+            throw new Exception('Invalid primary key');
+        }
+        
+        $select->addWhereCondition();
+        $res = $this->executeSql($select);
+        foreach ($res as $col => $val){
+            eval("$o->set$col($val);");
+        }
     }
     
+    public function executeSql(SqlStatement $query, array $params = null){
+        $q = Cache::getInstance()->getQuery($query);
+        return $q->execute($params);
+    }
 }

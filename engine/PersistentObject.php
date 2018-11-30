@@ -5,7 +5,7 @@ include_once 'OraDao.php';
 /**
  * Description of PersistentObject
  *
- * @author fprofeti
+ * @author Federico Profeti (federico.profeti@gmail.com)
  */
 
 abstract class PersistentObject {
